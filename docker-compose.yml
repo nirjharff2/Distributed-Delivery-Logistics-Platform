@@ -1,9 +1,11 @@
+version: "3.8"
+
 services:
   user-db:
-    image: postgres:18-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_PASSWORD: secret
       POSTGRES_DB: userdb
     ports:
       - "5432:5432"
@@ -14,10 +16,10 @@ services:
       retries: 5
 
   order-db:
-    image: postgres:18-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_PASSWORD: secret
       POSTGRES_DB: orderdb
     ports:
       - "5433:5432"
@@ -28,20 +30,20 @@ services:
       retries: 5
 
   redis:
-    image: redis:latest
+    image: redis:alpine
     ports:
       - "6379:6379"
 
   rabbitmq:
-      image: rabbitmq:3.13-management
-      ports:
-        - "5672:5672"
-        - "15672:15672"
-      healthcheck:
-        test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
-        interval: 5s
-        timeout: 5s
-        retries: 10
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   user-service:
     build: ./user-service
@@ -52,6 +54,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      redis:
+        condition: service_started
 
   order-service:
     build: ./order-service
@@ -62,6 +66,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      user-service:
+        condition: service_started
 
   notification-service:
     build: ./notification-service
