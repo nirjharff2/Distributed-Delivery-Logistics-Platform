@@ -74,3 +74,19 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+        
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - JWT_SECRET=super-secret-key
+      - USER_SERVICE_URL=http://user-service:8001
+      - ORDER_SERVICE_URL=http://order-service:8002
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8003
+    depends_on:
+      - user-service
+      - order-service
+      - notification-service
